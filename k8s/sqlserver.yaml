@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ecommerce-sqlserver-pvc
+  namespace: ecommerce
+  labels:
+    app.kubernetes.io/name: ecommerce-sqlserver
+    app.kubernetes.io/part-of: ecommerce-platform
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-sqlserver
+  namespace: ecommerce
+  labels:
+    app.kubernetes.io/name: ecommerce-sqlserver
+    app.kubernetes.io/part-of: ecommerce-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommerce-sqlserver
+  template:
+    metadata:
+      labels:
+        app: ecommerce-sqlserver
+    spec:
+      containers:
+        - name: sqlserver
+          image: mcr.microsoft.com/mssql/server:2022-latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 1433
+              name: mssql
+          env:
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: MSSQL_PID
+              value: "Developer"
+            - name: MSSQL_SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: MSSQL_SA_PASSWORD
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          volumeMounts:
+            - name: mssql-data
+              mountPath: /var/opt/mssql
+          readinessProbe:
+            tcpSocket:
+              port: 1433
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          livenessProbe:
+            tcpSocket:
+              port: 1433
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 5
+      volumes:
+        - name: mssql-data
+          persistentVolumeClaim:
+            claimName: ecommerce-sqlserver-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqlserver
+  namespace: ecommerce
+  labels:
+    app.kubernetes.io/name: ecommerce-sqlserver
+    app.kubernetes.io/part-of: ecommerce-platform
+spec:
+  type: ClusterIP
+  selector:
+    app: ecommerce-sqlserver
+  ports:
+    - port: 1433
+      targetPort: 1433
+      name: mssql
+

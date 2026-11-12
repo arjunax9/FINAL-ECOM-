@@ -1,19 +1,119 @@
-<div>
-  <h2>Your Cart</h2>
-  <div *ngIf="items.length===0">Cart is empty</div>
-  <div *ngFor="let it of items; let i = index">
-    <h4>{{it.product.name}}</h4>
-  <p>
-    Qty: <button (click)="decrease(i)">-</button>
-    {{it.quantity}}
-    <button (click)="increase(i)">+</button>
-  </p>
-  <p>Price: {{it.product.price | currency}} each</p>
-  <p>Line: {{(it.product.price * it.quantity) | currency}}</p>
-  <button (click)="remove(i)">Remove</button>
+<div class="cart-page container">
+  <!-- Page Header -->
+  <div class="cart-header">
+    <h1 class="page-title">Shopping Bag</h1>
+    <span class="items-count-badge" *ngIf="items.length > 0">{{ items.length }} unique item(s)</span>
   </div>
-  <div *ngIf="items.length>0">
-  <div>Total: {{total | currency}}</div>
-  <button (click)="checkout()">Checkout</button>
+
+  <!-- Empty State -->
+  <div *ngIf="items.length === 0" class="empty-cart-card card">
+    <div class="empty-icon-circle">
+      <i class="fa-solid fa-basket-shopping"></i>
+    </div>
+    <h2>Your shopping bag is empty</h2>
+    <p>Explore our wide selection of tech gadgets, accessories, and apparel to fill it up.</p>
+    <a routerLink="/products" class="btn btn-primary btn-lg">
+      <i class="fa-solid fa-arrow-left"></i>
+      <span>Start Shopping</span>
+    </a>
+  </div>
+
+  <!-- Main Cart Layout -->
+  <div *ngIf="items.length > 0" class="cart-layout">
+    <!-- Left: Cart Items List -->
+    <div class="cart-items-column">
+      <div class="items-table-header">
+        <span class="col-prod">Product</span>
+        <span class="col-price">Unit Price</span>
+        <span class="col-qty">Quantity</span>
+        <span class="col-sub">Subtotal</span>
+        <span class="col-act"></span>
+      </div>
+
+      <div class="cart-item-card card" *ngFor="let it of items; let i = index">
+        <div class="item-prod-info">
+          <img [src]="imgSvc.getImage(it.product)" [alt]="it.product.name" class="item-thumb" />
+          <div class="item-details">
+            <span class="item-cat">{{ it.product.category }}</span>
+            <a [routerLink]="['/products', it.product.id]" class="item-name">{{ it.product.name }}</a>
+            <span class="item-sku">SKU: #{{ it.product.id }}</span>
+          </div>
+        </div>
+
+        <div class="item-unit-price">
+          <span class="mobile-label">Price:</span>
+          <span>{{ it.product.price | currency }}</span>
+        </div>
+
+        <div class="item-quantity">
+          <div class="qty-stepper">
+            <button (click)="decrease(i)" class="qty-btn" title="Decrease">-</button>
+            <span class="qty-val">{{ it.quantity }}</span>
+            <button (click)="increase(i)" class="qty-btn" title="Increase">+</button>
+          </div>
+        </div>
+
+        <div class="item-subtotal">
+          <span class="mobile-label">Subtotal:</span>
+          <strong>{{ (it.product.price * it.quantity) | currency }}</strong>
+        </div>
+
+        <div class="item-actions">
+          <button (click)="remove(i)" class="remove-btn" title="Remove item">
+            <i class="fa-regular fa-trash-can"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="cart-bottom-actions">
+        <a routerLink="/products" class="btn btn-secondary">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Continue Shopping</span>
+        </a>
+        <button (click)="clearCart()" class="btn btn-outline" style="color: #ef4444; border-color: #fecaca;">
+          <i class="fa-solid fa-trash"></i>
+          <span>Clear Bag</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right: Sticky Order Summary -->
+    <div class="cart-summary-column">
+      <div class="summary-card card">
+        <h3 class="summary-title">Order Summary</h3>
+
+        <div class="summary-lines">
+          <div class="summary-line">
+            <span>Bag Subtotal</span>
+            <span>{{ total | currency }}</span>
+          </div>
+          <div class="summary-line">
+            <span>Estimated Shipping</span>
+            <span class="free-shipping">FREE</span>
+          </div>
+          <div class="summary-line">
+            <span>Estimated Sales Tax</span>
+            <span>$0.00</span>
+          </div>
+        </div>
+
+        <div class="summary-total-divider"></div>
+
+        <div class="summary-total">
+          <span>Estimated Total</span>
+          <span class="total-amount">{{ total | currency }}</span>
+        </div>
+
+        <button (click)="checkout()" class="btn btn-primary btn-lg checkout-cta-btn">
+          <i class="fa-solid fa-lock"></i>
+          <span>Proceed to Checkout</span>
+        </button>
+
+        <div class="checkout-guarantee">
+          <i class="fa-solid fa-shield-check"></i>
+          <span>Encrypted 256-Bit SSL Checkout</span>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

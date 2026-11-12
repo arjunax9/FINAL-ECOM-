@@ -1,5 +1,32 @@
-<app-navbar></app-navbar>
-<div class="content">
-  <router-outlet></router-outlet>
+<div class="app-layout">
+  <app-navbar></app-navbar>
+  <main class="content-wrapper">
+    <router-outlet></router-outlet>
+  </main>
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div class="footer-brand">
+        <div class="brand-logo">
+          <i class="fa-solid fa-bolt-lightning logo-icon"></i>
+          <span class="brand-name">ApexStore</span>
+        </div>
+        <p class="brand-tagline">Next-generation microservices-powered e-commerce platform built on .NET 10 & Angular.</p>
+      </div>
+      <div class="footer-links">
+        <span class="links-title">Quick Navigation</span>
+        <a routerLink="/products">Catalog</a>
+        <a routerLink="/cart">Shopping Bag</a>
+        <a routerLink="/orders">Orders</a>
+      </div>
+      <div class="footer-meta">
+        <span class="links-title">Status</span>
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span>Gateway (Port 5000) Active</span>
+        </div>
+        <p class="copyright">© 2026 ApexStore Inc. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+  <app-chatbot></app-chatbot>
 </div>
-

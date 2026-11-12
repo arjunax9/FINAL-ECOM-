@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-frontend
+  namespace: ecommerce
+  labels:
+    app.kubernetes.io/name: ecommerce-frontend
+    app.kubernetes.io/part-of: ecommerce-platform
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ecommerce-frontend
+  template:
+    metadata:
+      labels:
+        app: ecommerce-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: ecommerce-frontend:latest
+          imagePullPolicy: IfNotPresent
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - "sed -i 's/172.27.49.182/localhost/g' /usr/share/nginx/html/main.*.js && sed -i 's/main.*\\.js/&?v=fresh/g' /usr/share/nginx/html/index.html && sed -i 's/public, immutable/no-store, no-cache, must-revalidate/g' /etc/nginx/conf.d/default.conf && nginx -s reload"
+          ports:
+            - containerPort: 80
+              name: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: ecommerce
+  labels:
+    app.kubernetes.io/name: ecommerce-frontend
+    app.kubernetes.io/part-of: ecommerce-platform
+spec:
+  type: ClusterIP
+  selector:
+    app: ecommerce-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+      name: http
+

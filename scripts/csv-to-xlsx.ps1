@@ -24,7 +24,8 @@ try {
 	# 51 = xlOpenXMLWorkbook (xlsx)
 	$workbook.SaveAs((Resolve-Path $OutPath).Path, 51)
 	$workbook.Close($false)
-} finally {
+}
+finally {
 	$excel.Quit()
 	[System.Runtime.Interopservices.Marshal]::ReleaseComObject($workbook) | Out-Null
 	[System.Runtime.Interopservices.Marshal]::ReleaseComObject($excel) | Out-Null

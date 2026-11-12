@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-ai-service
+  namespace: ecommerce
+  labels:
+    app.kubernetes.io/name: ecommerce-ai-service
+    app.kubernetes.io/part-of: ecommerce-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommerce-ai-service
+  template:
+    metadata:
+      labels:
+        app: ecommerce-ai-service
+    spec:
+      containers:
+        - name: ai-service
+          image: ecommerce-ai-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5004
+              name: http
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: ecommerce-config
+                  key: ASPNETCORE_ENVIRONMENT
+            - name: ASPNETCORE_HTTP_PORTS
+              value: "5004"
+            - name: ASPNETCORE_URLS
+              value: "http://+:5004"
+            - name: AzureAi__Endpoint
+              valueFrom:
+                configMapKeyRef:
+                  name: ecommerce-config
+                  key: AZURE_AI_ENDPOINT
+            - name: AzureAi__ApiKey
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: AZURE_AI_API_KEY
+            - name: AzureAi__ChatDeploymentName
+              valueFrom:
+                configMapKeyRef:
+                  name: ecommerce-config
+                  key: AZURE_AI_CHAT_DEPLOYMENT
+            - name: AzureAi__EmbeddingDeploymentName
+              valueFrom:
+                configMapKeyRef:
+                  name: ecommerce-config
+                  key: AZURE_AI_EMBEDDING_DEPLOYMENT
+            - name: AzureAi__ApiVersion
+              valueFrom:
+                configMapKeyRef:
+                  name: ecommerce-config
+                  key: AZURE_AI_API_VERSION
+            - name: AzureAi__WorkspaceProjectId
+              valueFrom:
+                configMapKeyRef:
+                  name: ecommerce-config
+                  key: AZURE_AI_PROJECT_ID
+            - name: AzureAi__WorkspaceUrl
+              valueFrom:
+                configMapKeyRef:
+                  name: ecommerce-config
+                  key: AZURE_AI_WORKSPACE_URL
+            - name: Services__ProductServiceUrl
+              valueFrom:
+                configMapKeyRef:
+                  name: ecommerce-config
+                  key: PRODUCT_SERVICE_URL
+            - name: Services__OrderServiceUrl
+              valueFrom:
+                configMapKeyRef:
+                  name: ecommerce-config
+                  key: ORDER_SERVICE_URL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /swagger/v1/swagger.json
+              port: 5004
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /swagger/v1/swagger.json
+              port: 5004
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-service
+  namespace: ecommerce
+  labels:
+    app.kubernetes.io/name: ecommerce-ai-service
+    app.kubernetes.io/part-of: ecommerce-platform
+spec:
+  type: ClusterIP
+  selector:
+    app: ecommerce-ai-service
+  ports:
+    - port: 5004
+      targetPort: 5004
+      name: http
+

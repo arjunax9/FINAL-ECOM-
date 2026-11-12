@@ -16,6 +16,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpGet("{productId}")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetQuantity(int productId)
     {
         var qty = await _service.GetQuantityAsync(productId);

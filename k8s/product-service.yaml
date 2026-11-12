@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-product-service
+  namespace: ecommerce
+  labels:
+    app.kubernetes.io/name: ecommerce-product-service
+    app.kubernetes.io/part-of: ecommerce-platform
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ecommerce-product-service
+  template:
+    metadata:
+      labels:
+        app: ecommerce-product-service
+    spec:
+      containers:
+        - name: product-service
+          image: ecommerce-product-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5002
+              name: http
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: ecommerce-config
+                  key: ASPNETCORE_ENVIRONMENT
+            - name: ASPNETCORE_HTTP_PORTS
+              value: "5002"
+            - name: ASPNETCORE_URLS
+              value: "http://+:5002"
+            - name: ConnectionStrings__DefaultConnection
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: PRODUCT_DB_CONNECTION
+            - name: Jwt__Key
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: JWT_SECRET_KEY
+            - name: Jwt__Issuer
+              valueFrom:
+                configMapKeyRef:
+                  name: ecommerce-config
+                  key: JWT_ISSUER
+            - name: Jwt__Audience
+              valueFrom:
+                configMapKeyRef:
+                  name: ecommerce-config
+                  key: JWT_AUDIENCE
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /swagger/v1/swagger.json
+              port: 5002
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /swagger/v1/swagger.json
+              port: 5002
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-service
+  namespace: ecommerce
+  labels:
+    app.kubernetes.io/name: ecommerce-product-service
+    app.kubernetes.io/part-of: ecommerce-platform
+spec:
+  type: ClusterIP
+  selector:
+    app: ecommerce-product-service
+  ports:
+    - port: 5002
+      targetPort: 5002
+      name: http
+

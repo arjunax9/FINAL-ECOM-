@@ -45,4 +45,15 @@ export class AuthService {
     if (!token) return null;
     try { const payload = JSON.parse(atob(token.split('.')[1])); return Number(payload.sub || payload.nameid || payload.userId); } catch { return null; }
   }
+
+  getUserName(): string {
+    const token = this.getToken();
+    if (!token) return '';
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.name || payload.email || 'User';
+    } catch {
+      return '';
+    }
+  }
 }

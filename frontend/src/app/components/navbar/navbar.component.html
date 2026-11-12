@@ -1,11 +1,70 @@
-<nav class="nav">
-  <a routerLink="/">Home</a>
-  <a routerLink="/products">Products</a>
-  <a routerLink="/cart">Cart</a>
-  <a *ngIf="auth.isLoggedIn()" routerLink="/orders">My Orders</a>
-  <a *ngIf="auth.isAdmin()" routerLink="/admin">Admin</a>
-  <span class="spacer"></span>
-  <a *ngIf="!auth.isLoggedIn()" routerLink="/login">Login</a>
-  <a *ngIf="!auth.isLoggedIn()" routerLink="/register">Register</a>
-  <a *ngIf="auth.isLoggedIn()" (click)="auth.logout()">Logout</a>
-</nav>
+<header class="header-nav">
+  <div class="container nav-container">
+    <!-- Brand Logo -->
+    <a routerLink="/" class="brand-link">
+      <div class="logo-box">
+        <i class="fa-solid fa-bolt-lightning"></i>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">ApexStore</span>
+        <span class="brand-sub">ENTERPRISE</span>
+      </div>
+    </a>
+
+    <!-- Navigation Links -->
+    <nav class="nav-links">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
+        <i class="fa-solid fa-house"></i>
+        <span>Home</span>
+      </a>
+      <a routerLink="/products" routerLinkActive="active" class="nav-item">
+        <i class="fa-solid fa-store"></i>
+        <span>Catalog</span>
+      </a>
+      <a *ngIf="auth.isLoggedIn()" routerLink="/orders" routerLinkActive="active" class="nav-item">
+        <i class="fa-solid fa-boxes-packing"></i>
+        <span>My Orders</span>
+      </a>
+      <a *ngIf="auth.isAdmin()" routerLink="/admin" routerLinkActive="active" class="nav-item admin-link">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>Admin Panel</span>
+      </a>
+    </nav>
+
+    <!-- Right Controls -->
+    <div class="nav-actions">
+      <!-- Cart Button with Live Badge -->
+      <a routerLink="/cart" class="cart-btn" routerLinkActive="active">
+        <i class="fa-solid fa-bag-shopping"></i>
+        <span class="cart-label">Cart</span>
+        <span *ngIf="(cartCount$ | async) as count" class="cart-counter" [class.bounce]="count > 0">
+          {{ count }}
+        </span>
+      </a>
+
+      <!-- Authenticated User Menu -->
+      <ng-container *ngIf="auth.isLoggedIn(); else guestMenu">
+        <div class="user-pill">
+          <div class="avatar-circle">
+            <i class="fa-solid fa-user"></i>
+          </div>
+          <div class="user-info">
+            <span class="user-name">{{ auth.getUserName() || 'Customer' }}</span>
+            <span class="user-role" [class.admin-role]="auth.isAdmin()">{{ auth.isAdmin() ? 'Administrator' : 'Customer' }}</span>
+          </div>
+          <button (click)="auth.logout()" class="logout-btn" title="Sign Out">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- Guest Login / Register -->
+      <ng-template #guestMenu>
+        <div class="auth-buttons">
+          <a routerLink="/login" class="btn btn-outline btn-sm">Sign In</a>
+          <a routerLink="/register" class="btn btn-primary btn-sm">Register</a>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</header>

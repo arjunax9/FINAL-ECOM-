@@ -3,4 +3,14 @@
   <Project Path="ECommerce.Data/ECommerce.Data.csproj" />
   <Project Path="ECommerce.Models/ECommerce.Models.csproj" />
   <Project Path="ECommerceAPI/ECommerceAPI.csproj" />
+  <Project Path="Services/ECommerce.AuthService/ECommerce.AuthService.csproj" />
+  <Project Path="Services/ECommerce.ProductService/ECommerce.ProductService.csproj" />
+  <Project Path="Services/ECommerce.OrderService/ECommerce.OrderService.csproj" />
+  <Project Path="Services/ECommerce.ApiGateway/ECommerce.ApiGateway.csproj" />
+  <Project Path="Services/ECommerce.AIService/ECommerce.AIService.csproj" />
+  <Project Path="tests/ECommerce.AuthService.Tests/ECommerce.AuthService.Tests.csproj" />
+  <Project Path="tests/ECommerce.ProductService.Tests/ECommerce.ProductService.Tests.csproj" />
+  <Project Path="tests/ECommerce.OrderService.Tests/ECommerce.OrderService.Tests.csproj" />
+  <Project Path="tests/ECommerce.ApiGateway.Tests/ECommerce.ApiGateway.Tests.csproj" />
+  <Project Path="tests/ECommerce.AIService.Tests/ECommerce.AIService.Tests.csproj" />
 </Solution>

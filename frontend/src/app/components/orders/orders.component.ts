@@ -1,8 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { OrderService } from '../../services/order.service';
 import { AuthService } from '../../services/auth.service';
+import { SignalRService } from '../../services/signalr.service';
 
-@Component({ selector: 'app-orders', templateUrl: './orders.component.html' })
+@Component({
+  selector: 'app-orders',
+  templateUrl: './orders.component.html',
+  styleUrls: ['./orders.component.css']
+})
 export class OrdersComponent implements OnInit {
   orders: any[] = [];
   loading = false;
@@ -10,10 +15,23 @@ export class OrdersComponent implements OnInit {
   actionMessage = '';
   approvingId: number | null = null;
 
-  constructor(private svc: OrderService, private auth: AuthService) {}
+  constructor(
+    private svc: OrderService,
+    private auth: AuthService,
+    private signalR: SignalRService
+  ) {}
 
   ngOnInit(): void {
     this.loadOrders();
+    this.signalR.startConnection();
+    this.signalR.on('OrderStatusChanged', (data: any) => {
+      const order = this.orders.find(o => o.id === data?.orderId);
+      if (order) {
+        order.status = data.newStatus;
+        this.actionMessage = `Live Update: Order #${data.orderId} status changed to ${data.newStatus}!`;
+        setTimeout(() => this.actionMessage = '', 4000);
+      }
+    });
   }
 
   loadOrders(): void {
@@ -29,7 +47,7 @@ export class OrdersComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
-        this.error = 'Failed to load orders';
+        this.error = 'Failed to load orders. Please ensure Order Service is running.';
         this.loading = false;
       }
     });

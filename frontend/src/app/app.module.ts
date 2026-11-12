@@ -17,6 +17,7 @@ import { OrdersComponent } from './components/orders/orders.component';
 import { OrderDetailsComponent } from './components/order-details/order-details.component';
 import { CheckoutComponent } from './components/checkout/checkout.component';
 import { AdminComponent } from './components/admin/admin.component';
+import { ChatbotComponent } from './components/chatbot/chatbot.component';
 
 @NgModule({
   declarations: [
@@ -31,7 +32,8 @@ import { AdminComponent } from './components/admin/admin.component';
     OrdersComponent,
     OrderDetailsComponent,
     CheckoutComponent,
-    AdminComponent
+    AdminComponent,
+    ChatbotComponent
   ],
   imports: [
     BrowserModule,

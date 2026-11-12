@@ -1,15 +1,72 @@
-<div class="form">
-  <h2>Login</h2>
-  <form (ngSubmit)="submit()" [formGroup]="form">
-    <div>
-      <label>Email</label>
-      <input formControlName="email" />
+<div class="auth-page container">
+  <div class="auth-card card">
+    <div class="auth-header">
+      <div class="auth-icon-circle">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      <h1 class="auth-title">Welcome Back</h1>
+      <p class="auth-subtitle">Sign in to your ApexStore account to manage your shopping cart and orders.</p>
     </div>
-    <div>
-      <label>Password</label>
-      <input type="password" formControlName="password" />
+
+    <!-- Quick Credentials Helper Chips -->
+    <div class="demo-chips-box">
+      <span class="chips-label">Quick Sign-In Demo Accounts:</span>
+      <div class="chips-group">
+        <button type="button" (click)="fillCustomer()" class="chip-btn">
+          <i class="fa-solid fa-user"></i>
+          <span>Customer (demo@local)</span>
+        </button>
+        <button type="button" (click)="fillAdmin()" class="chip-btn admin-chip">
+          <i class="fa-solid fa-shield"></i>
+          <span>Admin (admin@local)</span>
+        </button>
+      </div>
     </div>
-    <div *ngIf="error" class="error">{{error}}</div>
-    <button type="submit">Login</button>
-  </form>
+
+    <!-- Error Alert -->
+    <div *ngIf="error" class="alert alert-danger">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span>{{ error }}</span>
+    </div>
+
+    <!-- Form -->
+    <form (ngSubmit)="submit()" [formGroup]="form" class="auth-form">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <div class="input-with-icon">
+          <i class="fa-regular fa-envelope input-icon"></i>
+          <input
+            type="email"
+            formControlName="email"
+            class="form-control"
+            placeholder="you@example.com"
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-with-icon">
+          <i class="fa-solid fa-key input-icon"></i>
+          <input
+            type="password"
+            formControlName="password"
+            class="form-control"
+            placeholder="••••••••"
+          />
+        </div>
+      </div>
+
+      <button type="submit" [disabled]="form.invalid || loading" class="btn btn-primary btn-lg submit-btn">
+        <i *ngIf="!loading" class="fa-solid fa-arrow-right-to-bracket"></i>
+        <i *ngIf="loading" class="fa-solid fa-circle-notch fa-spin"></i>
+        <span>{{ loading ? 'Signing In...' : 'Sign In to Account' }}</span>
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <span>Don't have an account yet?</span>
+      <a routerLink="/register" class="auth-link">Create Account</a>
+    </div>
+  </div>
 </div>

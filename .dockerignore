@@ -1,0 +1,25 @@
+# Ignore version control and IDE metadata
+.git
+.gitignore
+.gitattributes
+.vs
+.vscode
+
+# Ignore build artifacts
+**/bin/
+**/obj/
+**/out/
+**/dist/
+
+# Ignore frontend node_modules and builds
+**/node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# Ignore temporary and log files
+**/*.user
+**/*.suo
+**/*.log
+**/*.tmp
+samples/

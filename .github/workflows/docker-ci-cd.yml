@@ -1,0 +1,85 @@
+name: Docker Container Build & CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*.*.*' ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  docker-build-push:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: auth-service
+            context: .
+            dockerfile: Services/ECommerce.AuthService/Dockerfile
+            image: ecommerce-auth-service
+          - name: product-service
+            context: .
+            dockerfile: Services/ECommerce.ProductService/Dockerfile
+            image: ecommerce-product-service
+          - name: order-service
+            context: .
+            dockerfile: Services/ECommerce.OrderService/Dockerfile
+            image: ecommerce-order-service
+          - name: api-gateway
+            context: .
+            dockerfile: Services/ECommerce.ApiGateway/Dockerfile
+            image: ecommerce-api-gateway
+          - name: ai-service
+            context: .
+            dockerfile: Services/ECommerce.AIService/Dockerfile
+            image: ecommerce-ai-service
+          - name: frontend
+            context: ./frontend
+            dockerfile: frontend/Dockerfile
+            image: ecommerce-frontend
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.image }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=short
+            type=ref,event=tag
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

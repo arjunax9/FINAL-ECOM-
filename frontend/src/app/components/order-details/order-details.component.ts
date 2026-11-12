@@ -5,59 +5,77 @@ import { OrderService } from '../../services/order.service';
 @Component({
   selector: 'app-order-details',
   template: `
-  <div style="max-width: 800px; margin: 0 auto; padding: 20px;">
-    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 20px;">
-      <h2 style="margin: 0;">Order Details</h2>
-      <a routerLink="/orders" style="color: #4f46e5; text-decoration: none; font-weight: 500;">← Back to My Orders</a>
+  <div class="container" style="max-width: 900px; padding: 32px 20px 60px;">
+    <!-- Top Nav -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+      <div>
+        <a routerLink="/orders" style="display: inline-flex; align-items: center; gap: 8px; color: var(--primary); font-weight: 600; font-size: 0.9rem; text-decoration: none; margin-bottom: 8px;">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back to All Orders</span>
+        </a>
+        <h1 style="font-size: 2rem; font-weight: 800; color: #0f172a; margin: 0;">Order Summary</h1>
+      </div>
+      <span *ngIf="order" [class]="'badge ' + (order.status === 'Paid' ? 'badge-success' : (order.status === 'Pending' ? 'badge-warning' : 'badge-primary'))" style="font-size: 0.85rem; padding: 6px 16px;">
+        {{ order.status }}
+      </span>
     </div>
 
-    <div *ngIf="loading" style="padding: 15px; color: #4a5568;">Loading order details...</div>
-    <div *ngIf="error" style="padding: 15px; color: #e53e3e; background: #fff5f5; border-radius: 6px; margin-bottom: 15px;">{{error}}</div>
-    <div *ngIf="actionMessage" style="padding: 12px 16px; background-color: #def7ec; color: #03543f; border: 1px solid #bcf0da; border-radius: 6px; margin-bottom: 15px; font-weight: 500;">
-      ✓ {{ actionMessage }}
+    <!-- Alerts -->
+    <div *ngIf="loading" class="alert alert-info">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <span>Loading order details...</span>
+    </div>
+    <div *ngIf="error" class="alert alert-danger">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span>{{ error }}</span>
+    </div>
+    <div *ngIf="actionMessage" class="alert alert-success">
+      <i class="fa-solid fa-circle-check"></i>
+      <span>{{ actionMessage }}</span>
     </div>
 
-    <div *ngIf="order" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="margin: 0; font-size: 1.4rem;">Order #{{order.id}}</h3>
-        <span [style.backgroundColor]="order.status === 'Paid' ? '#d1fae5' : (order.status === 'Pending' ? '#fef3c7' : '#e0f2fe')"
-              [style.color]="order.status === 'Paid' ? '#065f46' : (order.status === 'Pending' ? '#92400e' : '#0369a1')"
-              style="padding: 6px 16px; border-radius: 9999px; font-size: 0.9rem; font-weight: 600; text-transform: uppercase;">
-          {{order.status}}
-        </span>
+    <!-- Main Order Details Card -->
+    <div *ngIf="order && !loading" class="card" style="padding: 32px; border-radius: 16px; background: #ffffff;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; margin-bottom: 24px;">
+        <div>
+          <span style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Tracking Number</span>
+          <h2 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 4px 0 0;">#ORD-{{ order.id }}</h2>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Total Billed</span>
+          <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary);">{{ order.totalAmount | currency }}</div>
+        </div>
       </div>
 
-      <div style="margin-bottom: 20px; font-size: 1.2rem; font-weight: 600; color: #1e293b;">
-        Total Amount: {{order.totalAmount | currency}}
-      </div>
-
-      <div style="margin-top: 20px;">
-        <h4 style="margin: 0 0 10px 0; color: #475569; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">Order Items</h4>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 8px;">
+      <!-- Order Items Table -->
+      <h3 style="font-size: 1rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px;">Items in this Shipment</h3>
+      <div style="overflow-x: auto; margin-bottom: 28px;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
           <thead>
-            <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; text-align: left;">
-              <th style="padding: 10px 12px; font-size: 0.85rem; color: #64748b;">Product ID</th>
-              <th style="padding: 10px 12px; font-size: 0.85rem; color: #64748b;">Quantity</th>
-              <th style="padding: 10px 12px; font-size: 0.85rem; color: #64748b;">Price</th>
-              <th style="padding: 10px 12px; font-size: 0.85rem; color: #64748b;">Subtotal</th>
+            <tr style="background: #f8fafc; border-bottom: 1px solid var(--border-color);">
+              <th style="padding: 12px 16px; font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Product ID</th>
+              <th style="padding: 12px 16px; font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Quantity</th>
+              <th style="padding: 12px 16px; font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Unit Price</th>
+              <th style="padding: 12px 16px; font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; text-align: right;">Subtotal</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let it of order.orderItems" style="border-bottom: 1px solid #f1f5f9;">
-              <td style="padding: 10px 12px; color: #334155;">#{{it.productId}}</td>
-              <td style="padding: 10px 12px; color: #334155;">{{it.quantity}}</td>
-              <td style="padding: 10px 12px; color: #334155;">{{it.price | currency}}</td>
-              <td style="padding: 10px 12px; font-weight: 500; color: #1e293b;">{{(it.price * it.quantity) | currency}}</td>
+            <tr *ngFor="let it of order.orderItems" style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding: 14px 16px; font-weight: 600; color: #1e293b;">Product #{{ it.productId }}</td>
+              <td style="padding: 14px 16px; color: #475569;">{{ it.quantity }}</td>
+              <td style="padding: 14px 16px; color: #475569;">{{ it.price | currency }}</td>
+              <td style="padding: 14px 16px; font-weight: 700; color: #0f172a; text-align: right;">{{ (it.price * it.quantity) | currency }}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div *ngIf="order.status === 'Pending'" style="margin-top: 24px; padding-top: 18px; border-top: 1px solid #e2e8f0;">
-        <button (click)="approveOrder()"
-                [disabled]="approving"
-                style="background-color: #10b981; color: white; border: none; padding: 10px 22px; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer;">
-          {{ approving ? 'Approving Order...' : '✓ Approve & Pay Order Now' }}
+      <!-- Action Button if Pending -->
+      <div *ngIf="order.status === 'Pending'" style="padding-top: 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
+        <button (click)="approveOrder()" [disabled]="approving" class="btn btn-success btn-lg">
+          <i *ngIf="!approving" class="fa-solid fa-check"></i>
+          <i *ngIf="approving" class="fa-solid fa-circle-notch fa-spin"></i>
+          <span>{{ approving ? 'Approving Order...' : 'Approve & Settle Payment' }}</span>
         </button>
       </div>
     </div>
@@ -76,7 +94,7 @@ export class OrderDetailsComponent implements OnInit {
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!id) {
-      this.error = 'No order id provided';
+      this.error = 'No order ID was provided.';
       return;
     }
     this.loadOrder(id);
@@ -90,7 +108,7 @@ export class OrderDetailsComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
-        this.error = 'Failed to load order details';
+        this.error = 'Failed to load order details.';
         this.loading = false;
       }
     });

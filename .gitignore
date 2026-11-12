@@ -367,4 +367,6 @@ frontend/node_modules/
 frontend/dist/
 frontend/.angular/
 frontend/.vscode/
-*.Backup.tmp
+*.Backup.tmp
+*.tar
+images.tar

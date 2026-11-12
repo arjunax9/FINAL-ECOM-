@@ -1,15 +1,129 @@
-<div class="products">
-  <h2>Products</h2>
-  <div *ngIf="loading">Loading...</div>
-  <div *ngIf="error">{{error}}</div>
-  <div class="grid">
-    <div class="card" *ngFor="let p of products">
-      <h3>{{p.name}}</h3>
-      <p>{{p.description}}</p>
-      <p>Price: {{p.price | currency}}</p>
-      <p>Category: {{p.category}}</p>
-      <a [routerLink]="['/products', p.id]">Details</a>
-      <button (click)="addToCart(p)">Add to cart</button>
+<div class="products-page container">
+  <!-- Page Header -->
+  <div class="catalog-header">
+    <div class="header-titles">
+      <span class="badge badge-primary">Full Store Catalog</span>
+      <h1 class="page-title">Discover Premium Products</h1>
+      <p class="page-sub">Explore our curated selection of high-performance electronics, apparel, and home essentials.</p>
     </div>
+
+    <!-- Live Toast Feedback -->
+    <div *ngIf="addedNotification" class="toast-notification">
+      <i class="fa-solid fa-circle-check"></i>
+      <span>{{ addedNotification }}</span>
+    </div>
+  </div>
+
+  <!-- Search & Filter Bar -->
+  <div class="filter-toolbar card">
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()"
+        placeholder="Search products by title or description..."
+        class="search-input"
+      />
+      <button *ngIf="searchTerm" (click)="searchTerm=''; onSearchChange()" class="clear-search">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="toolbar-right">
+      <div class="sort-box">
+        <label for="sortSelect" class="sort-label">Sort By:</label>
+        <select id="sortSelect" [(ngModel)]="sortBy" (change)="onSortChange()" class="sort-select">
+          <option value="featured">Featured</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="name">Product Name (A-Z)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Filter Pills -->
+  <div class="categories-bar">
+    <button
+      *ngFor="let cat of categories"
+      (click)="selectCategory(cat)"
+      class="cat-pill"
+      [class.active]="selectedCategory === cat"
+    >
+      {{ cat }}
+    </button>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error" class="alert alert-danger">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>{{ error }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading catalog items...</p>
+  </div>
+
+  <!-- Products Grid -->
+  <div *ngIf="!loading && filteredProducts.length > 0" class="products-grid">
+    <div class="product-card card card-hoverable" *ngFor="let p of filteredProducts">
+      <!-- Image Showcase -->
+      <a [routerLink]="['/products', p.id]" class="product-image-container">
+        <img
+          [src]="imgSvc.getImage(p)"
+          [alt]="p.name"
+          class="product-image"
+          loading="lazy"
+        />
+        <div class="image-overlay">
+          <span class="view-btn">View Details</span>
+        </div>
+        <span class="category-badge">{{ p.category }}</span>
+        <span *ngIf="(p.quantity ?? 0) > 0" class="stock-badge in-stock">
+          <i class="fa-solid fa-circle-check"></i> Stock: {{ p.quantity }}
+        </span>
+        <span *ngIf="(p.quantity ?? 0) <= 0" class="stock-badge out-stock">
+          Out of Stock
+        </span>
+      </a>
+
+      <!-- Card Body -->
+      <div class="card-body">
+        <a [routerLink]="['/products', p.id]" class="product-title-link">
+          <h3 class="product-title" [title]="p.name">{{ p.name }}</h3>
+        </a>
+        <p class="product-desc">{{ p.description }}</p>
+
+        <div class="card-footer">
+          <div class="price-box">
+            <span class="price-label">Price</span>
+            <span class="price-val">{{ p.price | currency }}</span>
+          </div>
+          <button
+            (click)="addToCart(p, $event)"
+            class="btn btn-primary add-cart-btn"
+            [disabled]="(p.quantity ?? 0) <= 0"
+          >
+            <i class="fa-solid fa-cart-plus"></i>
+            <span>Add</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && filteredProducts.length === 0" class="empty-state card">
+    <div class="empty-icon">
+      <i class="fa-solid fa-box-open"></i>
+    </div>
+    <h3>No products found</h3>
+    <p>We couldn't find any products matching your search criteria.</p>
+    <button (click)="searchTerm=''; selectedCategory='All'; applyFilters()" class="btn btn-secondary">
+      Reset Filters
+    </button>
   </div>
 </div>

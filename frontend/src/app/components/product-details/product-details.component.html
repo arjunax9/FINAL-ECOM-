@@ -1,8 +1,167 @@
-<div *ngIf="loading">Loading...</div>
-<div *ngIf="error">{{error}}</div>
-<div *ngIf="product">
-  <h2>{{product.name}}</h2>
-  <p>{{product.description}}</p>
-  <p>Price: {{product.price | currency}}</p>
-  <p>Quantity: {{product.quantity}}</p>
+<div class="product-details-page container">
+  <!-- Breadcrumbs -->
+  <nav class="breadcrumb-nav">
+    <a routerLink="/">Home</a>
+    <i class="fa-solid fa-chevron-right breadcrumb-separator"></i>
+    <a routerLink="/products">Products</a>
+    <i class="fa-solid fa-chevron-right breadcrumb-separator"></i>
+    <span class="breadcrumb-current">{{ product?.name || 'Product Details' }}</span>
+  </nav>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading product details...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="alert alert-danger">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>{{ error }}</span>
+  </div>
+
+  <!-- Success Notification -->
+  <div *ngIf="addedMessage" class="alert alert-success">
+    <i class="fa-solid fa-circle-check"></i>
+    <span>{{ addedMessage }}</span>
+  </div>
+
+  <!-- Product Showcase -->
+  <div *ngIf="product && !loading" class="product-layout card">
+    <!-- Left Column: Gallery Image -->
+    <div class="gallery-column">
+      <div class="image-wrapper">
+        <img
+          [src]="imgSvc.getImage(product)"
+          [alt]="product.name"
+          class="main-image"
+        />
+        <span class="cat-tag">{{ product.category }}</span>
+      </div>
+    </div>
+
+    <!-- Right Column: Product Info & Buy Box -->
+    <div class="info-column">
+      <div class="header-meta">
+        <span class="badge badge-primary">{{ product.category }}</span>
+        <span class="sku-text">Product SKU: #{{ product.id }}</span>
+      </div>
+
+      <h1 class="item-title">{{ product.name }}</h1>
+
+      <div class="price-section">
+        <span class="main-price">{{ product.price | currency }}</span>
+        <div class="stock-indicator">
+          <span *ngIf="(product.quantity ?? 0) > 0" class="badge badge-success">
+            <i class="fa-solid fa-circle-check"></i> In Stock ({{ product.quantity }} available)
+          </span>
+          <span *ngIf="(product.quantity ?? 0) <= 0" class="badge badge-danger">
+            <i class="fa-solid fa-circle-xmark"></i> Out of Stock
+          </span>
+        </div>
+      </div>
+
+      <div class="description-section">
+        <h3>Description</h3>
+        <p class="description-text">{{ product.description }}</p>
+      </div>
+
+      <!-- Action Box -->
+      <div class="purchase-box" *ngIf="(product.quantity ?? 0) > 0">
+        <div class="qty-control">
+          <label class="qty-label">Quantity</label>
+          <div class="stepper">
+            <button (click)="decreaseQty()" [disabled]="quantity <= 1" class="step-btn">-</button>
+            <span class="step-val">{{ quantity }}</span>
+            <button (click)="increaseQty()" [disabled]="quantity >= (product.quantity ?? 99)" class="step-btn">+</button>
+          </div>
+        </div>
+
+        <button (click)="addToCart()" class="btn btn-primary btn-lg add-to-cart-btn">
+          <i class="fa-solid fa-bag-shopping"></i>
+          <span>Add to Shopping Bag</span>
+        </button>
+      </div>
+
+      <!-- Trust Features -->
+      <div class="trust-features">
+        <div class="trust-item">
+          <i class="fa-solid fa-truck-fast"></i>
+          <div>
+            <strong>Fast Delivery</strong>
+            <p>Dispatched directly from local regional hub</p>
+          </div>
+        </div>
+        <div class="trust-item">
+          <i class="fa-solid fa-shield-halved"></i>
+          <div>
+            <strong>Verified Genuine</strong>
+            <p>100% authentic product guaranteed</p>
+          </div>
+        </div>
+        <div class="trust-item">
+          <i class="fa-solid fa-rotate-left"></i>
+          <div>
+            <strong>30-Day Returns</strong>
+            <p>Hassle-free replacement or refund</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customers Also Bought Section -->
+  <section *ngIf="product && !loading && customersAlsoBought.length > 0" class="also-bought-section">
+    <div class="also-bought-header">
+      <div class="also-bought-title-group">
+        <span class="badge badge-primary also-badge">
+          <i class="fa-solid fa-bag-shopping"></i> Frequently Paired
+        </span>
+        <h2 class="also-bought-title">Customers Also Bought</h2>
+        <p class="also-bought-sub">
+          Shoppers who purchased <strong>{{ product.name }}</strong> also frequently added these complementary items to their order.
+        </p>
+      </div>
+    </div>
+
+    <!-- Recommendations Grid -->
+    <div class="also-bought-grid">
+      <div class="also-card card" *ngFor="let item of customersAlsoBought">
+        <a [routerLink]="['/products', item.id]" class="also-img-container">
+          <img
+            [src]="imgSvc.getImage(item)"
+            [alt]="item.name"
+            class="also-img"
+            loading="lazy"
+          />
+          <div class="also-overlay">
+            <span class="also-view-btn">View Product</span>
+          </div>
+          <span class="also-cat-pill">{{ item.category }}</span>
+        </a>
+
+        <div class="also-card-body">
+          <a [routerLink]="['/products', item.id]" class="also-title-link">
+            <h4 class="also-item-title" [title]="item.name">{{ item.name }}</h4>
+          </a>
+          <p class="also-item-desc">{{ item.description }}</p>
+
+          <div class="also-card-footer">
+            <div class="also-price-box">
+              <span class="also-price">{{ item.price | currency }}</span>
+            </div>
+            <button
+              (click)="addAlsoBoughtToCart(item, $event)"
+              class="btn btn-primary btn-sm add-also-btn"
+              [disabled]="(item.quantity ?? 0) <= 0"
+              title="Add to shopping bag"
+            >
+              <i class="fa-solid fa-cart-plus"></i>
+              <span>Add</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>

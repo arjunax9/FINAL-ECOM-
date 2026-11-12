@@ -1,0 +1,115 @@
+services:
+  sqlserver:
+    container_name: ecommerce-sqlserver
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Password123!
+    ports:
+      - "1433:1433"
+    restart: unless-stopped
+
+  auth-service:
+    container_name: ecommerce-auth-service
+    build:
+      context: .
+      dockerfile: Services/ECommerce.AuthService/Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=5001
+      - ASPNETCORE_URLS=http://+:5001
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=ECommerce_AuthDB;User Id=sa;Password=Password123!;TrustServerCertificate=True;
+    depends_on:
+      - sqlserver
+    restart: unless-stopped
+
+  product-service:
+    container_name: ecommerce-product-service
+    build:
+      context: .
+      dockerfile: Services/ECommerce.ProductService/Dockerfile
+    ports:
+      - "5002:5002"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=5002
+      - ASPNETCORE_URLS=http://+:5002
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=ECommerce_ProductDB;User Id=sa;Password=Password123!;TrustServerCertificate=True;
+    depends_on:
+      - sqlserver
+    restart: unless-stopped
+
+  order-service:
+    container_name: ecommerce-order-service
+    build:
+      context: .
+      dockerfile: Services/ECommerce.OrderService/Dockerfile
+    ports:
+      - "5003:5003"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=5003
+      - ASPNETCORE_URLS=http://+:5003
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=ECommerce_OrderDB;User Id=sa;Password=Password123!;TrustServerCertificate=True;
+      - Services__ProductServiceUrl=http://product-service:5002/
+    depends_on:
+      - sqlserver
+      - product-service
+    restart: unless-stopped
+
+  ai-service:
+    container_name: ecommerce-ai-service
+    build:
+      context: .
+      dockerfile: Services/ECommerce.AIService/Dockerfile
+    ports:
+      - "5004:5004"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=5004
+      - ASPNETCORE_URLS=http://+:5004
+      - AzureAi__Endpoint=https://ibmmart.services.ai.azure.com
+      - AzureAI__ApiKey=${AZURE_AI_API_KEY}
+      - AzureAi__ChatDeploymentName=gpt-4.1-mini
+      - AzureAi__EmbeddingDeploymentName=text-embedding-3-small
+      - Services__ProductServiceUrl=http://product-service:5002/
+      - Services__OrderServiceUrl=http://order-service:5003/
+    depends_on:
+      - product-service
+      - order-service
+    restart: unless-stopped
+
+  api-gateway:
+    container_name: ecommerce-api-gateway
+    build:
+      context: .
+      dockerfile: Services/ECommerce.ApiGateway/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=5000
+      - ASPNETCORE_URLS=http://+:5000
+      - ReverseProxy__Clusters__auth-cluster__Destinations__auth-destination__Address=http://auth-service:5001/
+      - ReverseProxy__Clusters__product-cluster__Destinations__product-destination__Address=http://product-service:5002/
+      - ReverseProxy__Clusters__order-cluster__Destinations__order-destination__Address=http://order-service:5003/
+      - ReverseProxy__Clusters__ai-cluster__Destinations__ai-destination__Address=http://ai-service:5004/
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
+      - ai-service
+    restart: unless-stopped
+
+  frontend:
+    container_name: ecommerce-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      - api-gateway
+    restart: unless-stopped

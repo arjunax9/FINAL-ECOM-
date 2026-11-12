@@ -1,26 +1,162 @@
-<div>
-  <h2>Checkout</h2>
-  <div *ngIf="items.length===0">Cart is empty</div>
-  <div *ngIf="items.length>0">
-    <div *ngFor="let it of items">
-      <h4>{{it.product.name}}</h4>
-      <p>Qty: {{it.quantity}}</p>
-      <p>Price: {{it.product.price | currency}}</p>
+<div class="checkout-page container">
+  <!-- Page Header -->
+  <div class="checkout-header">
+    <h1 class="page-title">Secure Checkout</h1>
+    <div class="secure-badge">
+      <i class="fa-solid fa-lock"></i>
+      <span>256-Bit SSL Encrypted</span>
     </div>
-
-    <div>Total: {{total | currency}}</div>
-
-    <div>
-      <label>
-        <input type="radio" name="pm" value="card" [(ngModel)]="paymentMethod" /> Card
-      </label>
-      <label>
-        <input type="radio" name="pm" value="paypal" [(ngModel)]="paymentMethod" /> PayPal
-      </label>
-    </div>
-
-    <button (click)="place()">Place Order</button>
   </div>
 
-  <div *ngIf="message">{{message}}</div>
+  <!-- Success Confirmation Screen -->
+  <div *ngIf="successOrderId" class="success-screen card">
+    <div class="success-icon-circle">
+      <i class="fa-solid fa-check"></i>
+    </div>
+    <h2>Order Successfully Placed & Paid!</h2>
+    <p class="order-ref">Order Reference: <strong>#{{ successOrderId }}</strong></p>
+    <p class="success-desc">
+      Thank you for your purchase. Your order has been placed into our fulfillment pipeline and inventory has been reserved.
+    </p>
+
+    <div class="success-actions">
+      <a [routerLink]="['/orders', successOrderId]" class="btn btn-primary btn-lg">
+        <i class="fa-solid fa-receipt"></i>
+        <span>View Order Details</span>
+      </a>
+      <a routerLink="/products" class="btn btn-secondary btn-lg">
+        <i class="fa-solid fa-store"></i>
+        <span>Continue Shopping</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Empty Bag Warning (when not in success screen) -->
+  <div *ngIf="!successOrderId && items.length === 0" class="empty-screen card">
+    <i class="fa-solid fa-basket-shopping empty-icon"></i>
+    <h2>Your shopping bag is empty</h2>
+    <p>Please add products to your cart before proceeding to checkout.</p>
+    <a routerLink="/products" class="btn btn-primary">Discover Products</a>
+  </div>
+
+  <!-- Main Checkout Grid -->
+  <div *ngIf="!successOrderId && items.length > 0" class="checkout-grid">
+    <!-- Left Column: Shipping & Payment Options -->
+    <div class="forms-column">
+      <!-- Alerts -->
+      <div *ngIf="errorMessage" class="alert alert-danger">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <!-- Section 1: Shipping Address -->
+      <div class="section-card card">
+        <div class="section-title-bar">
+          <span class="step-circle">1</span>
+          <h3>Delivery Address</h3>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label">Full Name</label>
+            <input type="text" [(ngModel)]="shipping.fullName" class="form-control" />
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label">Street Address</label>
+            <input type="text" [(ngModel)]="shipping.address" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">City</label>
+            <input type="text" [(ngModel)]="shipping.city" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Postal Code</label>
+            <input type="text" [(ngModel)]="shipping.postalCode" class="form-control" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Payment Method -->
+      <div class="section-card card">
+        <div class="section-title-bar">
+          <span class="step-circle">2</span>
+          <h3>Payment Method</h3>
+        </div>
+
+        <div class="payment-methods-grid">
+          <label class="payment-card" [class.selected]="paymentMethod === 'card'">
+            <input type="radio" name="pm" value="card" [(ngModel)]="paymentMethod" class="radio-input" />
+            <div class="payment-card-content">
+              <div class="payment-card-header">
+                <i class="fa-regular fa-credit-card payment-icon"></i>
+                <span class="payment-card-title">Credit or Debit Card</span>
+              </div>
+              <span class="payment-sub">Visa, Mastercard, American Express</span>
+            </div>
+            <i class="fa-solid fa-circle-check check-indicator"></i>
+          </label>
+
+          <label class="payment-card" [class.selected]="paymentMethod === 'paypal'">
+            <input type="radio" name="pm" value="paypal" [(ngModel)]="paymentMethod" class="radio-input" />
+            <div class="payment-card-content">
+              <div class="payment-card-header">
+                <i class="fa-brands fa-paypal payment-icon paypal-blue"></i>
+                <span class="payment-card-title">PayPal Express</span>
+              </div>
+              <span class="payment-sub">Fast checkout with PayPal balance</span>
+            </div>
+            <i class="fa-solid fa-circle-check check-indicator"></i>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Order Review & Submit -->
+    <div class="review-column">
+      <div class="review-card card">
+        <h3 class="review-title">Items in Order ({{ items.length }})</h3>
+
+        <div class="review-items-list">
+          <div class="review-item" *ngFor="let it of items">
+            <img [src]="imgSvc.getImage(it.product)" [alt]="it.product.name" class="review-thumb" />
+            <div class="review-item-meta">
+              <span class="review-item-name">{{ it.product.name }}</span>
+              <span class="review-item-sub">Qty: {{ it.quantity }} &times; {{ it.product.price | currency }}</span>
+            </div>
+            <span class="review-item-total">{{ (it.product.price * it.quantity) | currency }}</span>
+          </div>
+        </div>
+
+        <div class="cost-breakdown">
+          <div class="cost-line">
+            <span>Subtotal</span>
+            <span>{{ total | currency }}</span>
+          </div>
+          <div class="cost-line">
+            <span>Express Shipping</span>
+            <span class="free-text">FREE</span>
+          </div>
+          <div class="cost-line">
+            <span>Estimated Taxes</span>
+            <span>$0.00</span>
+          </div>
+        </div>
+
+        <div class="review-total">
+          <span>Total To Pay</span>
+          <span class="total-highlight">{{ total | currency }}</span>
+        </div>
+
+        <button (click)="place()" [disabled]="placing" class="btn btn-primary btn-lg place-order-btn">
+          <i *ngIf="!placing" class="fa-solid fa-lock"></i>
+          <i *ngIf="placing" class="fa-solid fa-circle-notch fa-spin"></i>
+          <span>{{ placing ? 'Processing Payment...' : 'Pay & Complete Order' }}</span>
+        </button>
+
+        <p class="legal-note">
+          By clicking pay, you agree to our Terms of Sale and authorization of payment charges.
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
